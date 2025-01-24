@@ -19,8 +19,6 @@ Shader "Custom/ToonWater"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            // make fog work
-            // #pragma multi_compile_fog
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
@@ -35,6 +33,13 @@ Shader "Custom/ToonWater"
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
             };
+
+            float4 _DepthGradientShallow;
+            float4 _DepthGradientDeep;
+
+            float _DepthMaxDistance;
+
+            sampler2D _CameraDepthTexture;
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
@@ -51,7 +56,7 @@ Shader "Custom/ToonWater"
             half4 frag(v2f i) : SV_Target
             {
                 // sample the texture
-                half4 col = tex2D(_MainTex, i.uv);
+                half4 col = tex2D(_CameraDepthTexture, i.uv);
                 // apply fog
                 return col;
             }
