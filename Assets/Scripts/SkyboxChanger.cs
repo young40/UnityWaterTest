@@ -32,6 +32,7 @@ public class SkyboxChanger : MonoBehaviour
         RenderSettings.skybox = skyboxes[index];
     }
 
+#if  UNITY_EDITOR
     private void OnValidate()
     {
         if (skyboxes.Length != 0)
@@ -54,4 +55,5 @@ public class SkyboxChanger : MonoBehaviour
 
         skyboxes = list.ToArray();
     }
+#endif
 }
