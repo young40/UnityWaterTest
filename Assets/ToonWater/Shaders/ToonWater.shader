@@ -32,6 +32,7 @@ Shader "Custom/ToonWater"
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+                float4 screenPosition : TEXCOORD2;
             };
 
             float4 _DepthGradientShallow;
@@ -42,21 +43,25 @@ Shader "Custom/ToonWater"
             TEXTURE2D_X_FLOAT(_CameraDepthTexture);
             SAMPLER(sampler_CameraDepthTexture);
 
-            sampler2D _MainTex;
-            float4 _MainTex_ST;
-
             v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = TransformObjectToHClip(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                o.uv = v.uv;
+                o.screenPosition = ComputeScreenPos(o.vertex);
 
                 return o;
             }
 
             half4 frag(v2f i) : SV_Target
             {
-                half4 col = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, i.uv);
+                half2 uv = i.screenPosition.xy / i.screenPosition.w;
+
+                float exitingDepth01 = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, uv).r;
+
+                float existingDepthLinear = LinearEyeDepth(exitingDepth01, _ZBufferParams);
+                
+                half4 col = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, i.screenPosition);
                 return col;
             }
             ENDHLSL
