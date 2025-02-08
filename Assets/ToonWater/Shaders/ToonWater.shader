@@ -60,6 +60,14 @@ Shader "Custom/ToonWater"
                 float exitingDepth01 = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, uv).r;
 
                 float existingDepthLinear = LinearEyeDepth(exitingDepth01, _ZBufferParams);
+
+                float depthDifference = existingDepthLinear - i.screenPosition.w;
+
+                float waterDepthDifference = saturate(depthDifference / _DepthMaxDistance);
+
+                float4 color = lerp(_DepthGradientShallow, _DepthGradientDeep, waterDepthDifference);
+
+                return color;
                 
                 half4 col = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, i.screenPosition);
                 return col;
