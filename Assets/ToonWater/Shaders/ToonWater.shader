@@ -39,7 +39,8 @@ Shader "Custom/ToonWater"
 
             float _DepthMaxDistance;
 
-            sampler2D _CameraDepthTexture;
+            TEXTURE2D_X_FLOAT(_CameraDepthTexture);
+            SAMPLER(sampler_CameraDepthTexture);
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
@@ -55,9 +56,7 @@ Shader "Custom/ToonWater"
 
             half4 frag(v2f i) : SV_Target
             {
-                // sample the texture
-                half4 col = tex2D(_CameraDepthTexture, i.uv);
-                // apply fog
+                half4 col = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, i.uv);
                 return col;
             }
             ENDHLSL
