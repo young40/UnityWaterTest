@@ -5,6 +5,10 @@ Shader "Custom/ToonWater"
         _DepthGradientShallow("Depth Gradient Shallow", Color) = (0.325, 0.807, 0.971, 0.725)
         _DepthGradientDeep("Depth Gradient Deep", Color) = (0.086, 0.407, 1, 0.749)
         _DepthMaxDistance("Depth Maximum Distance", Float) = 1
+        
+        _SurfaceNoise("Surface Noise", 2D) = "white" {}
+        
+        _SurfaceNoiseCutoff("Surface Noise Cutoff", Range(0, 1)) = 0.777
     }
     SubShader
     {
@@ -30,9 +34,10 @@ Shader "Custom/ToonWater"
 
             struct v2f
             {
-                float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
                 float4 screenPosition : TEXCOORD2;
+
+                float2 noiseUV : TEXCOORD0;
             };
 
             float4 _DepthGradientShallow;
@@ -40,15 +45,21 @@ Shader "Custom/ToonWater"
 
             float _DepthMaxDistance;
 
+            float _SurfaceNoiseCutoff;
+
             TEXTURE2D_X_FLOAT(_CameraDepthTexture);
             SAMPLER(sampler_CameraDepthTexture);
+
+            TEXTURE2D(_SurfaceNoise);
+            SAMPLER(sampler_SurfaceNoise);
+            float4 _SurfaceNoise_ST;
 
             v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = TransformObjectToHClip(v.vertex);
-                o.uv = v.uv;
                 o.screenPosition = ComputeScreenPos(o.vertex);
+                o.noiseUV = TRANSFORM_TEX(v.uv, _SurfaceNoise);
 
                 return o;
             }
@@ -67,10 +78,11 @@ Shader "Custom/ToonWater"
 
                 float4 color = lerp(_DepthGradientShallow, _DepthGradientDeep, waterDepthDifference);
 
-                return color;
-                
-                half4 col = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, i.screenPosition);
-                return col;
+                float noise = SAMPLE_TEXTURE2D(_SurfaceNoise, sampler_SurfaceNoise, i.noiseUV).r;
+
+                float surfaceNoise = noise > _SurfaceNoiseCutoff ? 1 : 0;
+
+                return color + surfaceNoise;
             }
             ENDHLSL
         }
