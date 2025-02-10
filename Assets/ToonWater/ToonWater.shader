@@ -9,6 +9,8 @@ Shader "Custom/ToonWater"
         _SurfaceNoise("Surface Noise", 2D) = "white" {}
         
         _SurfaceNoiseCutoff("Surface Noise Cutoff", Range(0, 1)) = 0.777
+        
+        _FoamDistance("Foam Distance", Float) = 0.4
     }
     SubShader
     {
@@ -47,6 +49,8 @@ Shader "Custom/ToonWater"
 
             float _SurfaceNoiseCutoff;
 
+            float _FoamDistance;
+
             TEXTURE2D_X_FLOAT(_CameraDepthTexture);
             SAMPLER(sampler_CameraDepthTexture);
 
@@ -80,7 +84,10 @@ Shader "Custom/ToonWater"
 
                 float noise = SAMPLE_TEXTURE2D(_SurfaceNoise, sampler_SurfaceNoise, i.noiseUV).r;
 
-                float surfaceNoise = noise > _SurfaceNoiseCutoff ? 1 : 0;
+                float foamDepthDifference01 = saturate(depthDifference / _FoamDistance);
+                float surfaceNoiseCutoff = foamDepthDifference01 * _SurfaceNoiseCutoff;
+
+                float surfaceNoise = noise > surfaceNoiseCutoff ? 1 : 0;
 
                 return color + surfaceNoise;
             }
