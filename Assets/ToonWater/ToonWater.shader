@@ -13,6 +13,9 @@ Shader "Custom/ToonWater"
         _FoamDistance("Foam Distance", Float) = 0.4
         
         _SurfaceNoiseScroll("Surface Noise Scroll", Vector) = (0.03, 0.03, 0, 0)
+        
+        _SurfaceDistortion("Surface Distortion", 2D) ="white" {}
+        _SurfaceDistortionAmount("Surface Distortion Amount", Float) = 0.27
     }
     SubShader
     {
@@ -42,6 +45,8 @@ Shader "Custom/ToonWater"
                 float4 screenPosition : TEXCOORD2;
 
                 float2 noiseUV : TEXCOORD0;
+
+                float2 distortUV : TEXCOORD1;
             };
 
             float4 _DepthGradientShallow;
@@ -62,12 +67,19 @@ Shader "Custom/ToonWater"
             SAMPLER(sampler_SurfaceNoise);
             float4 _SurfaceNoise_ST;
 
+            TEXTURE2D(_SurfaceDistortion);
+            SAMPLER(sampler_SurfaceDistortion);
+            float4 _SurfaceDistortion_ST;
+
+            float _SurfaceDistortionAmount;
+
             v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = TransformObjectToHClip(v.vertex);
                 o.screenPosition = ComputeScreenPos(o.vertex);
                 o.noiseUV = TRANSFORM_TEX(v.uv, _SurfaceNoise);
+                o.distortUV = TRANSFORM_TEX(v.uv, _SurfaceDistortion);
 
                 return o;
             }
@@ -86,7 +98,10 @@ Shader "Custom/ToonWater"
 
                 float4 color = lerp(_DepthGradientShallow, _DepthGradientDeep, waterDepthDifference);
 
-                float2 noiseUV = float2(i.noiseUV.x + _Time.x * _SurfaceNoiseScroll.x, i.noiseUV.y + _Time.x * _SurfaceNoiseScroll.y);
+                float2 distortSample = (SAMPLE_TEXTURE2D(_SurfaceDistortion, sampler_SurfaceDistortion, i.distortUV).xy * 2 - 1) * _SurfaceDistortionAmount;
+
+                float2 noiseUV = float2((i.noiseUV.x + _Time.x * _SurfaceNoiseScroll.x) + distortSample.x,
+                    (i.noiseUV.y + _Time.x * _SurfaceNoiseScroll.y) + distortSample.y);
 
                 float noise = SAMPLE_TEXTURE2D(_SurfaceNoise, sampler_SurfaceNoise, noiseUV).r;
 
