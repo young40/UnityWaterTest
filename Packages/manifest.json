@@ -2,7 +2,7 @@
   "dependencies": {
     "com.unity.collab-proxy": "2.7.1",
     "com.unity.feature.development": "1.0.2",
-    "com.unity.ide.rider": "3.0.35",
+    "com.unity.ide.rider": "3.0.36",
     "com.unity.multiplayer.center": "1.0.0",
     "com.unity.render-pipelines.core": "file:../URPSource/com.unity.render-pipelines.core@405083404c88",
     "com.unity.render-pipelines.universal": "file:../URPSource/com.unity.render-pipelines.universal@82fb1398b3b8",
