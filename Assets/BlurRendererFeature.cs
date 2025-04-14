@@ -15,13 +15,14 @@ public class BlurRendererFeature : ScriptableRendererFeature
     [SerializeField] private Shader shader;
     [SerializeField] private Material material;
     [SerializeField] private BlurRenderPass blurRenderPass;
-    
+
     public override void Create()
     {
         if (shader == null)
         {
             return;
         }
+
         material = new Material(shader);
         blurRenderPass = new BlurRenderPass(material, settings);
 
@@ -31,15 +32,16 @@ public class BlurRendererFeature : ScriptableRendererFeature
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
         if (blurRenderPass == null)
-        { 
+        {
             return;
-        }                
+        }
+
         if (renderingData.cameraData.cameraType == CameraType.Game)
         {
             renderer.EnqueuePass(blurRenderPass);
         }
     }
-    
+
     protected override void Dispose(bool disposing)
     {
         if (Application.isPlaying)
@@ -50,5 +52,5 @@ public class BlurRendererFeature : ScriptableRendererFeature
         {
             DestroyImmediate(material);
         }
-    } 
+    }
 }
