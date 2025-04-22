@@ -43,7 +43,7 @@ public class BlurRenderPass : ScriptableRenderPass
 
     public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
     {
-        base.RecordRenderGraph(renderGraph, frameData);
+        //base.RecordRenderGraph(renderGraph, frameData);
 
         var resourceData = frameData.Get<UniversalResourceData>();
 
