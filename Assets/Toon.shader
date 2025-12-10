@@ -14,44 +14,44 @@
 		}
 		Pass
 		{
-			CGPROGRAM
+			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
 			
-			#include "UnityCG.cginc"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-			struct appdata
+			struct Attributes
 			{
 				float4 vertex : POSITION;				
-				float4 uv : TEXCOORD0;
+				float2 uv : TEXCOORD0;
 			};
 
-			struct v2f
+			struct Varyings
 			{
 				float4 pos : SV_POSITION;
 				float2 uv : TEXCOORD0;
 			};
 
-			sampler2D _MainTex;
-			float4 _MainTex_ST;
+			TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+            float4 _MainTex_ST;
+            float4 _Color;
 			
-			v2f vert (appdata v)
+			Varyings vert (Attributes IN)
 			{
-				v2f o;
-				o.pos = UnityObjectToClipPos(v.vertex);
-				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-				return o;
+				Varyings OUT;
+				OUT.pos = TransformObjectToHClip(IN.vertex);
+				OUT.uv = TRANSFORM_TEX(IN.uv, _MainTex);
+				return OUT;
 			}
 			
-			float4 _Color;
-
-			float4 frag (v2f i) : SV_Target
+			float4 frag (Varyings IN) : SV_Target
 			{
-				float4 sample = tex2D(_MainTex, i.uv);
+                float4 sample = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
 
 				return _Color * sample;
 			}
-			ENDCG
+			ENDHLSL
 		}
 	}
 }
