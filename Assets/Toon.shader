@@ -7,6 +7,11 @@
 	}
 	SubShader
 	{
+		Tags
+		{
+			"RenderPipeline" = "UniversalPipeline"
+			"RenderType" = "Opaque"
+		}
 		Pass
 		{
 			CGPROGRAM
