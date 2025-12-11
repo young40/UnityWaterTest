@@ -11,6 +11,12 @@
 		[HDR]
 		_SpecularColor("Specular Color", Color) = (0.9, 0.9, 0.9, 1)
 		_Glossiness("Glossiness", Float) = 32
+		
+		[HDR]
+		_RimColor("Rim Color", Color) = (1, 1, 1, 1)
+		_RimAmount("Rim Amount", Range(0, 1)) = 0.716
+		
+		_RimThreshold("Rim Threshold", Range(0, 1)) = 0.1
 	}
 	SubShader
 	{
@@ -51,6 +57,9 @@
 			float4 _AmbientColor;
 			float4 _SpecularColor;
 			float _Glossiness;
+			float4 _RimColor;
+			float _RimAmount;
+			float _RimThreshold;
 			
 			Varyings vert (Attributes IN)
 			{
@@ -87,11 +96,16 @@
 				float spceularIntensitySmooth = smoothstep(0.005, 0.01, specularIntensity);
 				float4 specular = spceularIntensitySmooth * _SpecularColor;
 				
+				float4 rimDot = 1 - dot(viewDir, normal);
+				float rimIntensity = rimDot * pow(NDotL, _RimThreshold);
+				rimIntensity = smoothstep(_RimAmount - 0.01, _RimAmount + 0.01, rimIntensity);
+				float4 rim = rimIntensity * _RimColor;
+				
 				float4 light = float4(lightIntensity * mainLight.color, 1);
 				
                 float4 sample = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
 
-				return (light + _AmbientColor + specular) * _Color * sample;
+				return (light + _AmbientColor + specular + rim) * _Color * sample;
 			}
 			ENDHLSL
 		}
