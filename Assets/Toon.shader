@@ -64,7 +64,8 @@
 				float3 normal = normalize(IN.worldNormal);
 				float NDotL = dot(_MainLightPosition.xyz, normal);
 				
-				float lightIntensity = step(0, NDotL);
+				float lightIntensity = smoothstep(0, 0.01, NDotL);
+				lightIntensity = step(0, NDotL);
 				
 				float4 light = float4(lightIntensity * mainLight.color, 1);
 				
