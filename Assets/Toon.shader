@@ -3,7 +3,10 @@
 	Properties
 	{
 		_Color("Color", Color) = (0.5, 0.65, 1, 1)
-		_MainTex("Main Texture", 2D) = "white" {}	
+		_MainTex("Main Texture", 2D) = "white" {}
+		
+		[HDR]
+		_AmbientColor("Ambient Color", Color) = (0.4, 0.4, 0.4, 1)
 	}
 	SubShader
 	{
@@ -39,6 +42,7 @@
             SAMPLER(sampler_MainTex);
             float4 _MainTex_ST;
             float4 _Color;
+			float4 _AmbientColor;
 			
 			Varyings vert (Attributes IN)
 			{
@@ -58,7 +62,7 @@
 				
                 float4 sample = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
 
-				return lightIntensity * _Color * sample;
+				return (lightIntensity + _AmbientColor) * _Color * sample;
 			}
 			ENDHLSL
 		}
