@@ -7,6 +7,10 @@
 		
 		[HDR]
 		_AmbientColor("Ambient Color", Color) = (0.4, 0.4, 0.4, 1)
+		
+		[HDR]
+		_SpecularColor("Specular Color", Color) = (0.9, 0.9, 0.9, 1)
+		_Glossiness("Glossiness", Float) = 32
 	}
 	SubShader
 	{
@@ -36,6 +40,7 @@
 				float4 pos : SV_POSITION;
 				float2 uv : TEXCOORD0;
 				float3 worldNormal : NORMAL;
+				float3 viewDir : TEXCOORD1;
 				float4 shadowCoord : TEXCOORD3;
 			};
 
@@ -44,15 +49,22 @@
             float4 _MainTex_ST;
             float4 _Color;
 			float4 _AmbientColor;
+			float4 _SpecularColor;
+			float _Glossiness;
 			
 			Varyings vert (Attributes IN)
 			{
 				Varyings OUT;
 				OUT.pos = TransformObjectToHClip(IN.vertex);
 				OUT.uv = TRANSFORM_TEX(IN.uv, _MainTex);
+				
+				VertexPositionInputs vertexInput =GetVertexPositionInputs(IN.vertex); 
+				
+				OUT.viewDir = GetWorldSpaceNormalizeViewDir(vertexInput.positionWS);
+				
 				OUT.worldNormal = TransformObjectToWorldNormal(IN.normal);
 				
-				OUT.shadowCoord = GetShadowCoord(GetVertexPositionInputs(IN.vertex));
+				OUT.shadowCoord = GetShadowCoord(vertexInput);
 				
 				return OUT;
 			}
@@ -65,13 +77,21 @@
 				float NDotL = dot(_MainLightPosition.xyz, normal);
 				
 				float lightIntensity = smoothstep(0, 0.01, NDotL);
-				lightIntensity = step(0, NDotL);
+				//lightIntensity = step(0, NDotL);
+				
+				float3 viewDir = IN.viewDir;// normalize(IN.viewDir);
+				float3 halfVector = normalize(mainLight.direction + viewDir);
+				float NdotH = dot(normal, halfVector);
+				
+				float specularIntensity = pow(NdotH * lightIntensity, _Glossiness * _Glossiness);
+				float spceularIntensitySmooth = smoothstep(0.005, 0.01, specularIntensity);
+				float4 specular = spceularIntensitySmooth * _SpecularColor;
 				
 				float4 light = float4(lightIntensity * mainLight.color, 1);
 				
                 float4 sample = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
 
-				return (light + _AmbientColor) * _Color * sample;
+				return (light + _AmbientColor + specular) * _Color * sample;
 			}
 			ENDHLSL
 		}
