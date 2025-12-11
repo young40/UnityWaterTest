@@ -19,17 +19,20 @@
 			#pragma fragment frag
 			
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 			struct Attributes
 			{
 				float4 vertex : POSITION;				
 				float2 uv : TEXCOORD0;
+				float3 normal : NORMAL;
 			};
 
 			struct Varyings
 			{
 				float4 pos : SV_POSITION;
 				float2 uv : TEXCOORD0;
+				float3 worldNormal : NORMAL;
 			};
 
 			TEXTURE2D(_MainTex);
@@ -42,14 +45,20 @@
 				Varyings OUT;
 				OUT.pos = TransformObjectToHClip(IN.vertex);
 				OUT.uv = TRANSFORM_TEX(IN.uv, _MainTex);
+				OUT.worldNormal = TransformObjectToWorldNormal(IN.normal);
 				return OUT;
 			}
 			
 			float4 frag (Varyings IN) : SV_Target
 			{
+				float3 normal = normalize(IN.worldNormal);
+				float NDotL = dot(_MainLightPosition.xyz, normal);
+				
+				float lightIntensity = step(0, NDotL);
+				
                 float4 sample = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
 
-				return _Color * sample;
+				return lightIntensity * _Color * sample;
 			}
 			ENDHLSL
 		}
