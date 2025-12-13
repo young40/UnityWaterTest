@@ -31,6 +31,10 @@
 			#pragma vertex vert
 			#pragma fragment frag
 			
+			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
+			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
+			#pragma multi_compile _ _SHADOWS_SOFT
+			
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
@@ -82,10 +86,12 @@
 			{
 				Light mainLight = GetMainLight(IN.shadowCoord);
 				
-				float3 normal = normalize(IN.worldNormal);
-				float NDotL = dot(_MainLightPosition.xyz, normal);
+				float shadow = MainLightRealtimeShadow(IN.shadowCoord);
 				
-				float lightIntensity = smoothstep(0, 0.01, NDotL);
+				float3 normal = normalize(IN.worldNormal);
+				float NDotL = dot(mainLight.direction, normal);
+				
+				float lightIntensity = smoothstep(0, 0.01, NDotL * shadow);
 				//lightIntensity = step(0, NDotL);
 				
 				float3 viewDir = IN.viewDir;// normalize(IN.viewDir);
