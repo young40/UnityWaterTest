@@ -2,6 +2,7 @@
 {
     Properties
     {
+        [HDR]
 		_Color("Color", Color) = (1,1,1,1)
         _MainTex ("Texture", 2D) = "white" {}
     }
@@ -9,58 +10,68 @@
     {
         Tags 
 		{ 
+		    "RenderPipeLine" = "UniversalPipeLine"
 			"RenderType" = "Opaque"
-			"LightMode" = "ForwardBase"
 		}
-
-		UsePass "Legacy Shaders/VertexLit/SHADOWCASTER"
 
         Pass
         {
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
-            #include "UnityCG.cginc"
-			#include "Lighting.cginc"
-
-            struct appdata
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            
+            struct Attributes
             {
-                float4 vertex : POSITION;
-				float3 normal : NORMAL;
-                float2 uv : TEXCOORD0;
+                float4 positionOS : POSITION;
+				float3 normalOS : NORMAL;
+                float2 texcoord : TEXCOORD0;
             };
 
-            struct v2f
+            struct Varyings
             {
                 float2 uv : TEXCOORD0;
-				float3 worldNormal : NORMAL;
-                float4 vertex : SV_POSITION;
+				float3 normalWS : TEXCOORD1;
+                float4 positionCS : SV_POSITION;
             };
 
-            sampler2D _MainTex;
-            float4 _MainTex_ST;
-
-            v2f vert (appdata v)
+            CBUFFER_START(UnityPreMaterial)
+                float4 _MainTex_ST;
+                float4 _Color;
+            CBUFFER_END
+            
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+            
+            Varyings vert (Attributes IN)
             {
-                v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-				o.worldNormal = normalize(mul((float3x3)UNITY_MATRIX_M, v.normal));
-                return o;
+                Varyings OUT;
+                
+                OUT.positionCS = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.uv = TRANSFORM_TEX(IN.texcoord, _MainTex);
+                OUT.normalWS = TransformObjectToWorldNormal(IN.normalOS);
+                
+                return OUT;
             }
 
-			float4 _Color;
-
-            float4 frag (v2f i) : SV_Target
+            float4 frag (Varyings IN) : SV_Target
             {
-				float NdotL = dot(i.worldNormal, _WorldSpaceLightPos0);
-				float light = saturate(floor(NdotL * 3) / (2 - 0.5)) * _LightColor0;
-
-                float4 col = tex2D(_MainTex, i.uv);
-                return (col * _Color) * (light + unity_AmbientSky);
+                float3 normalWS = normalize(IN.normalWS);
+                half4 color = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv) * _Color;
+                
+                Light mainLight = GetMainLight();
+                float NdotL = dot(normalWS, mainLight.direction);
+                
+                float lightIntensity = saturate(floor(NdotL * 3.0) / 1.5);
+                
+                color.rgb *= lightIntensity * mainLight.color;
+                color.rgb *= SampleSH(normalWS);
+                
+                return color;
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }
