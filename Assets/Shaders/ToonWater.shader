@@ -33,20 +33,28 @@
                 v2f o;
                 
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.screenPosition = ComputeScreenPos(v.vertex);
+                o.screenPosition = ComputeScreenPos(o.vertex);
                 
                 return o;
             }
             
             float4 _DepthGradientShallow;
             float4 _DepthGradientDeep;
-            float _DepthMaxDistant;
+            float _DepthMaxDistance;
             
             sampler2D _CameraDepthTexture;
             
             float4 fragment(v2f i) : SV_TARGET
             {
-                return float4(1, 0, 0, 1);
+                float existingDepth01 = tex2Dproj(_CameraDepthTexture, UNITY_PROJ_COORD(i.screenPosition)).r;
+                float existingDepthLinear = LinearEyeDepth(existingDepth01);
+                
+                float depthDifference = existingDepthLinear - i.screenPosition.w;
+                
+                float waterDepthDifference01 = saturate(depthDifference / _DepthMaxDistance);
+                float4 waterColor = lerp(_DepthGradientShallow, _DepthGradientDeep, waterDepthDifference01);
+                
+                return waterColor;
             }
             ENDCG
         }
