@@ -7,6 +7,7 @@
         _DepthMaxDistance("Depth Maximum Distance", Float) = 1 // 水的最深距离, 超过此则都显示 深水颜色
         
         _SurfaceNoise("Surface Noise", 2D) = "white" {}
+        _SurfaceNoiseCutoff("Surface Noise CutOff", Range(0, 1)) = 0.77
     }
     
     SubShader
@@ -32,6 +33,7 @@
                 float4 screenPosition : TEXCOORD2;
             };
             
+            float _SurfaceNoiseCutoff;
             sampler2D _SurfaceNoise;
             float4 _SurfaceNoise_ST;
             
@@ -65,7 +67,9 @@
                 
                 float surfaceNoiseSample = tex2D(_SurfaceNoise, i.nosizeUV).r;
                 
-                return waterColor + surfaceNoiseSample;
+                float surfaceNoise = surfaceNoiseSample > _SurfaceNoiseCutoff ? 1 : 0;
+                
+                return waterColor + surfaceNoise;
             }
             ENDCG
         }
