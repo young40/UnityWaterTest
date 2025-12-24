@@ -8,6 +8,8 @@
         
         _SurfaceNoise("Surface Noise", 2D) = "white" {}
         _SurfaceNoiseCutoff("Surface Noise CutOff", Range(0, 1)) = 0.77
+        
+        _FoamDistance("Foam Distance", Float) = 0.4
     }
     
     SubShader
@@ -36,6 +38,8 @@
             float _SurfaceNoiseCutoff;
             sampler2D _SurfaceNoise;
             float4 _SurfaceNoise_ST;
+            
+            float _FoamDistance;
             
             v2f vertex(appdata v)
             {
@@ -67,7 +71,10 @@
                 
                 float surfaceNoiseSample = tex2D(_SurfaceNoise, i.nosizeUV).r;
                 
-                float surfaceNoise = surfaceNoiseSample > _SurfaceNoiseCutoff ? 1 : 0;
+                float foamDepthDifference01 = saturate(depthDifference / _FoamDistance);
+                float surfaceNoiseCutoff = foamDepthDifference01 * _SurfaceNoiseCutoff;
+                
+                float surfaceNoise = surfaceNoiseSample > surfaceNoiseCutoff ? 1 : 0;
                 
                 return waterColor + surfaceNoise;
             }
