@@ -9,7 +9,8 @@
         _SurfaceNoise("Surface Noise", 2D) = "white" {}
         _SurfaceNoiseCutoff("Surface Noise CutOff", Range(0, 1)) = 0.77
         
-        _FoamDistance("Foam Distance", Float) = 0.4
+        _FoamMaxDistance("Foam Max Distance", Float) = 0.4
+        _FoamMinDistance("Foam Min Distance", Float) = 0.04
         
         _SurfaceNoiseScroll("Surface Noise Scroll", Float) = (0.3, 0.3, 0, 0)
         
@@ -47,7 +48,8 @@
             sampler2D _SurfaceNoise;
             float4 _SurfaceNoise_ST;
             
-            float _FoamDistance;
+            float _FoamMaxDistance;
+            float _FoamMinDistance;
             
             float2 _SurfaceNoiseScroll;
             
@@ -94,10 +96,12 @@
                 
                 float surfaceNoiseSample = tex2D(_SurfaceNoise, noiseUV).r;
                 
-                float existingNormal = tex2Dproj(_CameraNormalsTexture, UNITY_PROJ_COORD(i.screenPosition));
-                float3 normalDot = saturate(dot(existingNormal, i.viewNormal));
+                float3 existingNormal = tex2Dproj(_CameraNormalsTexture, UNITY_PROJ_COORD(i.screenPosition));
+                float normalDot = saturate(dot(existingNormal, i.viewNormal));
                 
-                float foamDepthDifference01 = saturate(depthDifference / _FoamDistance);
+                float foamDistance = lerp(_FoamMaxDistance, _FoamMinDistance, normalDot);
+                
+                float foamDepthDifference01 = saturate(depthDifference / foamDistance);
                 float surfaceNoiseCutoff = foamDepthDifference01 * _SurfaceNoiseCutoff;
                 
                 float surfaceNoise = surfaceNoiseSample > surfaceNoiseCutoff ? 1 : 0;
