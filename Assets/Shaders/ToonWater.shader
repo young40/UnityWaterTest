@@ -31,6 +31,7 @@
             {
                 float4 vertex : POSITION;
                 float4 uv : TEXCOORD0;
+                float3 normal : NORMAL;
             };
             
             struct v2f
@@ -39,6 +40,7 @@
                 float2 nosizeUV : TEXCOORD0;
                 float2 distorUV : TEXCOORD1;
                 float4 screenPosition : TEXCOORD2;
+                float3 viewNormal : NORMAL;
             };
             
             float _SurfaceNoiseCutoff;
@@ -62,6 +64,7 @@
                 o.screenPosition = ComputeScreenPos(o.vertex);
                 o.nosizeUV = TRANSFORM_TEX(v.uv, _SurfaceNoise);
                 o.distorUV = TRANSFORM_TEX(v.uv, _SurfaceDistortion);
+                o.viewNormal = COMPUTE_VIEW_NORMAL;
                 
                 return o;
             }
@@ -71,6 +74,8 @@
             float _DepthMaxDistance;
             
             sampler2D _CameraDepthTexture;
+            
+            sampler2D _CameraNormalsTexture;
             
             float4 fragment(v2f i) : SV_TARGET
             {
@@ -88,6 +93,9 @@
                                         i.nosizeUV.y + _Time.y * _SurfaceNoiseScroll.y + distorSample.y);
                 
                 float surfaceNoiseSample = tex2D(_SurfaceNoise, noiseUV).r;
+                
+                float existingNormal = tex2Dproj(_CameraNormalsTexture, UNITY_PROJ_COORD(i.screenPosition));
+                float3 normalDot = saturate(dot(existingNormal, i.viewNormal));
                 
                 float foamDepthDifference01 = saturate(depthDifference / _FoamDistance);
                 float surfaceNoiseCutoff = foamDepthDifference01 * _SurfaceNoiseCutoff;
