@@ -70,6 +70,14 @@
             
             float4 _FoamColor;
             
+            float4 alphaBlend(float4 top, float4 bottom)
+            {
+                float3 color = top.rgb * top.a + bottom.rgb * (1 - top.a);
+                float alpha = top.a + bottom.a * (1 - top.a);
+                
+                return float4(color, alpha);
+            }
+            
             v2f vertex(appdata v)
             {
                 v2f o;
@@ -118,9 +126,10 @@
                 
                 float surfaceNoise = surfaceNoiseSample > surfaceNoiseCutoff ? 1 : 0;
                 
-                float4 surfaceNoiseColor = _FoamColor * surfaceNoise;
+                float4 surfaceNoiseColor = _FoamColor;
+                surfaceNoiseColor.a *= surfaceNoise;
                 
-                return waterColor + surfaceNoiseColor;
+                return alphaBlend(surfaceNoiseColor, waterColor); // waterColor + surfaceNoiseColor;
             }
             ENDCG
         }
