@@ -124,7 +124,8 @@
                 float foamDepthDifference01 = saturate(depthDifference / foamDistance);
                 float surfaceNoiseCutoff = foamDepthDifference01 * _SurfaceNoiseCutoff;
                 
-                float surfaceNoise = surfaceNoiseSample > surfaceNoiseCutoff ? 1 : 0;
+                //float surfaceNoise = surfaceNoiseSample > surfaceNoiseCutoff ? 1 : 0;
+                float surfaceNoise = smoothstep(surfaceNoiseCutoff - 0.01, surfaceNoiseCutoff + 0.01, surfaceNoiseSample);
                 
                 float4 surfaceNoiseColor = _FoamColor;
                 surfaceNoiseColor.a *= surfaceNoise;
