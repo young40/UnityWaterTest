@@ -16,13 +16,15 @@
         
         _SurfaceDistortion("Surface Distortion", 2D) = "white" {}
         _SurfaceDistortionAmount("Surface Distortion Amount", Range(0, 1)) = 0.27
+        
+        _FoamColor("Foam Color", Color) = (1, 1, 1, 1)
     }
     
     SubShader
     {
         Tags
         {
-                "Queue" = "Transparent"
+            "Queue" = "Transparent"
         }
         
         Pass
@@ -65,6 +67,8 @@
             float4 _SurfaceDistortion_ST;
             
             float _SurfaceDistortionAmount;
+            
+            float4 _FoamColor;
             
             v2f vertex(appdata v)
             {
@@ -114,7 +118,9 @@
                 
                 float surfaceNoise = surfaceNoiseSample > surfaceNoiseCutoff ? 1 : 0;
                 
-                return waterColor + surfaceNoise;
+                float4 surfaceNoiseColor = _FoamColor * surfaceNoise;
+                
+                return waterColor + surfaceNoiseColor;
             }
             ENDCG
         }
